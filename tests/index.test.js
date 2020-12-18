@@ -4,19 +4,16 @@ jest.mock('fs');
 
 const core = require('@actions/core');
 const { GitHub, context } = require('@actions/github');
-const fs = require('fs');
-const run = require('../src/index.js');
+const run = require('../src/automerge.js');
 
 /* eslint-disable no-undef */
-describe('Create Release', () => {
-  let createRelease;
+describe('List Branches', () => {
+  let listBranches;
 
   beforeEach(() => {
-    createRelease = jest.fn().mockReturnValueOnce({
+    listBranches = jest.fn().mockReturnValueOnce({
       data: {
-        id: 'releaseId',
-        html_url: 'htmlUrl',
-        upload_url: 'uploadUrl'
+        details: 'details'
       }
     });
 
@@ -24,176 +21,29 @@ describe('Create Release', () => {
       owner: 'owner',
       repo: 'repo'
     };
-    context.sha = 'sha';
 
     const github = {
-      repos: {
-        createRelease
-      }
+      repos: { listBranches }
     };
 
     GitHub.mockImplementation(() => github);
   });
 
-  test('Create release endpoint is called', async () => {
+  test('AutoMerge endpoint is called', async () => {
     core.getInput = jest
       .fn()
-      .mockReturnValueOnce('refs/tags/v1.0.0')
-      .mockReturnValueOnce('myRelease')
-      .mockReturnValueOnce('myBody')
-      .mockReturnValueOnce('false')
-      .mockReturnValueOnce('false');
-
-    await run();
-
-    expect(createRelease).toHaveBeenCalledWith({
-      owner: 'owner',
-      repo: 'repo',
-      tag_name: 'v1.0.0',
-      name: 'myRelease',
-      body: 'myBody',
-      draft: false,
-      prerelease: false,
-      target_commitish: 'sha'
-    });
-  });
-
-  test('Draft release is created', async () => {
-    core.getInput = jest
-      .fn()
-      .mockReturnValueOnce('refs/tags/v1.0.0')
-      .mockReturnValueOnce('myRelease')
-      .mockReturnValueOnce('myBody')
-      .mockReturnValueOnce('true')
-      .mockReturnValueOnce('false');
-
-    await run();
-
-    expect(createRelease).toHaveBeenCalledWith({
-      owner: 'owner',
-      repo: 'repo',
-      tag_name: 'v1.0.0',
-      name: 'myRelease',
-      body: 'myBody',
-      draft: true,
-      prerelease: false,
-      target_commitish: 'sha'
-    });
-  });
-
-  test('Pre-release release is created', async () => {
-    core.getInput = jest
-      .fn()
-      .mockReturnValueOnce('refs/tags/v1.0.0')
-      .mockReturnValueOnce('myRelease')
-      .mockReturnValueOnce('myBody')
-      .mockReturnValueOnce('false')
-      .mockReturnValueOnce('true');
-
-    await run();
-
-    expect(createRelease).toHaveBeenCalledWith({
-      owner: 'owner',
-      repo: 'repo',
-      tag_name: 'v1.0.0',
-      name: 'myRelease',
-      body: 'myBody',
-      draft: false,
-      prerelease: true,
-      target_commitish: 'sha'
-    });
-  });
-
-  test('Release with empty body is created', async () => {
-    core.getInput = jest
-      .fn()
-      .mockReturnValueOnce('refs/tags/v1.0.0')
-      .mockReturnValueOnce('myRelease')
-      .mockReturnValueOnce('') // <-- The default value for body in action.yml
-      .mockReturnValueOnce('false')
-      .mockReturnValueOnce('false');
-
-    await run();
-
-    expect(createRelease).toHaveBeenCalledWith({
-      owner: 'owner',
-      repo: 'repo',
-      tag_name: 'v1.0.0',
-      name: 'myRelease',
-      body: '',
-      draft: false,
-      prerelease: false,
-      target_commitish: 'sha'
-    });
-  });
-
-  test('Release body based on file', async () => {
-    core.getInput = jest
-      .fn()
-      .mockReturnValueOnce('refs/tags/v1.0.0')
-      .mockReturnValueOnce('myRelease')
-      .mockReturnValueOnce('') // <-- The default value for body in action.yml
-      .mockReturnValueOnce('false')
-      .mockReturnValueOnce('false')
+      .mockReturnValueOnce('master')
+      .mockReturnValueOnce('develop')
+      .mockReturnValueOnce('release/')
+      .mockReturnValueOnce('merge-no-ff')
       .mockReturnValueOnce(null)
-      .mockReturnValueOnce('notes.md');
-
-    fs.readFileSync = jest.fn().mockReturnValueOnce('# this is a release\nThe markdown is strong in this one.');
+      .mockReturnValueOnce(null);
 
     await run();
 
-    expect(createRelease).toHaveBeenCalledWith({
+    expect(listBranches).toHaveBeenCalledWith({
       owner: 'owner',
-      repo: 'repo',
-      tag_name: 'v1.0.0',
-      name: 'myRelease',
-      body: '# this is a release\nThe markdown is strong in this one.',
-      draft: false,
-      prerelease: false,
-      target_commitish: 'sha'
+      repo: 'repo'
     });
-  });
-
-  test('Outputs are set', async () => {
-    core.getInput = jest
-      .fn()
-      .mockReturnValueOnce('refs/tags/v1.0.0')
-      .mockReturnValueOnce('myRelease')
-      .mockReturnValueOnce('myBody')
-      .mockReturnValueOnce('false')
-      .mockReturnValueOnce('false');
-
-    core.setOutput = jest.fn();
-
-    await run();
-
-    expect(core.setOutput).toHaveBeenNthCalledWith(1, 'id', 'releaseId');
-    expect(core.setOutput).toHaveBeenNthCalledWith(2, 'html_url', 'htmlUrl');
-    expect(core.setOutput).toHaveBeenNthCalledWith(3, 'upload_url', 'uploadUrl');
-  });
-
-  test('Action fails elegantly', async () => {
-    core.getInput = jest
-      .fn()
-      .mockReturnValueOnce('refs/tags/v1.0.0')
-      .mockReturnValueOnce('myRelease')
-      .mockReturnValueOnce('myBody')
-      .mockReturnValueOnce('false')
-      .mockReturnValueOnce('false');
-
-    createRelease.mockRestore();
-    createRelease.mockImplementation(() => {
-      throw new Error('Error creating release');
-    });
-
-    core.setOutput = jest.fn();
-
-    core.setFailed = jest.fn();
-
-    await run();
-
-    expect(createRelease).toHaveBeenCalled();
-    expect(core.setFailed).toHaveBeenCalledWith('Error creating release');
-    expect(core.setOutput).toHaveBeenCalledTimes(0);
   });
 });

@@ -20,13 +20,17 @@
   "author": "Michael Lodge-Paolini <michael.lodge-paolini@wexinc.com>",
   "license": "MIT",
   "private": true,
-  "main": "index.js",
+  "main": "dist/index.js",
   "scripts": {
+    "clean": "rimraf dist",
     "lint": "eslint \"src/**.js\" \"tests/**.js\" --fix",
     "test": "eslint \"src/**.js\" \"tests/**.js\" && jest --coverage",
     "test:debug": "node --inspect-brk node_modules/.bin/jest --runInBand",
+    "prebuild": "yarn clean",
     "build": "ncc build src/main.js -o dist --source-map --license licenses.txt",
-    "precommit": "rimraf dist && yarn build && git add dist/"
+    "precommit": "yarn clean && yarn build && git add dist/",
+    "preci": "rm -fr node_modules",
+    "ci": "yarn install --frozen-lockfile"
   },
   "jest": {
     "testEnvironment": "node",

@@ -23,9 +23,6 @@ inputs:
     description: Branch merging strategy.  See Readme for allowed options.
     required: true
     default: merge-no-ff
-  repo-token:
-    description: API Token to use on your behalf
-    required: true
 
 outputs:
   details:

@@ -1,4 +1,4 @@
-const run = require('./index');
+const run = require('./automerge');
 
 if (require.main === module) {
   run();

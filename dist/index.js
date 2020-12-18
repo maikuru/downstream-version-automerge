@@ -2,7 +2,7 @@ require('./sourcemap-register.js');module.exports =
 /******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
-/***/ 241:
+/***/ 351:
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -110,7 +110,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-const command_1 = __webpack_require__(241);
+const command_1 = __webpack_require__(351);
 const file_command_1 = __webpack_require__(717);
 const utils_1 = __webpack_require__(278);
 const os = __importStar(__webpack_require__(87));
@@ -5815,12 +5815,11 @@ function wrappy (fn, cb) {
 
 /***/ }),
 
-/***/ 351:
+/***/ 586:
 /***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
 const core = __webpack_require__(186);
 const { GitHub, context } = __webpack_require__(438);
-// const fs = require('fs');
 
 async function run() {
   try {
@@ -5830,64 +5829,22 @@ async function run() {
     // Get owner and repo from context of payload that triggered the action
     const { owner: currentOwner, repo: currentRepo } = context.repo;
 
-    const prodBranch = core.getInput('production-branch', {required: false}) || 'master';
-    const devBranch = core.getInput('development-branch', {required: false}) || 'develop';
-    const mergePattern = core.getInput('merge-pattern', {required: false}) || 'release/';
-    const mergeStrategy = core.getInput('merge-strategy', {required: false}) || 'merge-no-ff';
-
-    console.log(`prod branch ${prodBranch}`);
-    console.log(`dev branch ${devBranch}`);
-    console.log(`merge strategy ${mergeStrategy}`);
-    console.log(`release branch pattern: ${releaseBranchPattern}`);
+    const prodBranch = core.getInput('production-branch', { required: false }) || 'master';
+    const devBranch = core.getInput('development-branch', { required: false }) || 'develop';
+    const mergePattern = core.getInput('merge-pattern', { required: false }) || 'release/';
+    const mergeStrategy = core.getInput('merge-strategy', { required: false }) || 'merge-no-ff';
 
     const owner = core.getInput('owner', { required: false }) || currentOwner;
     const repo = core.getInput('repo', { required: false }) || currentRepo;
 
-    console.log(owner, repo);
-    //
-    //     // This removes the 'refs/tags' portion of the string, i.e. from 'refs/tags/v1.10.15' to 'v1.10.15'
-    //     const tag = tagName.replace('refs/tags/', '');
-    //     const releaseName = core.getInput('release_name', { required: false }).replace('refs/tags/', '');
-    //     const body = core.getInput('body', { required: false });
-    //     const draft = core.getInput('draft', { required: false }) === 'true';
-    //     const prerelease = core.getInput('prerelease', { required: false }) === 'true';
-    //     const commitish = core.getInput('commitish', { required: false }) || context.sha;
-    //
-    //     const bodyPath = core.getInput('body_path', { required: false });
-    //     const owner = core.getInput('owner', { required: false }) || currentOwner;
-    //     const repo = core.getInput('repo', { required: false }) || currentRepo;
-    //     let bodyFileContent = null;
-    //     if (bodyPath !== '' && !!bodyPath) {
-    //       try {
-    //         bodyFileContent = fs.readFileSync(bodyPath, { encoding: 'utf8' });
-    //       } catch (error) {
-    //         core.setFailed(error.message);
-    //       }
-    //     }
-    //
-    //     // Create a release
-    //     // API Documentation: https://developer.github.com/v3/repos/releases/#create-a-release
-    //     // Octokit Documentation: https://octokit.github.io/rest.js/#octokit-routes-repos-create-release
-    //     const createReleaseResponse = await github.repos.createRelease({
-    //       owner,
-    //       repo,
-    //       tag_name: tag,
-    //       name: releaseName,
-    //       body: bodyFileContent || body,
-    //       draft,
-    //       prerelease,
-    //       target_commitish: commitish
-    //     });
-    //
-    //     // Get the ID, html_url, and upload URL for the created Release from the response
-    //     const {
-    //       data: { id: releaseId, html_url: htmlUrl, upload_url: uploadUrl }
-    //     } = createReleaseResponse;
-    //
-    //     // Set the output variables for use by other actions: https://github.com/actions/toolkit/tree/master/packages/core#inputsoutputs
-    //     core.setOutput('id', releaseId);
-    //     core.setOutput('html_url', htmlUrl);
-        core.setOutput('details', 'I haven\'t done anything yet');
+    const branchList = await github.repos.listBranches({
+      owner,
+      repo
+    });
+
+    console.log(prodBranch, devBranch, mergePattern, mergeStrategy, owner, repo, branchList);
+
+    core.setOutput('details', "I haven't done anything yet");
   } catch (error) {
     core.setFailed(error.message);
   }
@@ -5901,7 +5858,7 @@ module.exports = run;
 /***/ 713:
 /***/ ((__unused_webpack_module, __unused_webpack_exports, __webpack_require__) => {
 
-const run = __webpack_require__(351);
+const run = __webpack_require__(586);
 
 if (require.main === require.cache[eval('__filename')]) {
   run();

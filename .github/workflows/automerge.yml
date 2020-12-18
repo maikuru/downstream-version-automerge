@@ -1,0 +1,21 @@
+on: [push]
+
+jobs:
+  version_auto_merge:
+    runs-on: ubuntu-latest
+    name: version automerge
+    steps:
+      - name: AutoMerge Step
+        id: downstream
+        uses: maikuru/downstream-version-automerge@latest
+        with:
+          production-branch: 'master'
+          development-branch: 'devlop'
+          merge-pattern: 'release/'
+          merge-strategy: 'merge-no-ff'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    # Use the output from the `hello` step
+      - name: Display the Action taken by the auto-merge
+        run: echo "Action Taken ${{ steps.downstream.outputs.details }}"
