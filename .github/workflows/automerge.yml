@@ -7,7 +7,7 @@ jobs:
     steps:
       - name: AutoMerge Step
         id: downstream
-        uses: maikuru/downstream-version-automerge@latest
+        uses: maikuru/downstream-version-automerge@v1.0.0-alpha
         with:
           production-branch: 'master'
           development-branch: 'devlop'
