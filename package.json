@@ -1,0 +1,65 @@
+{
+  "name": "downstream-version-automerge",
+  "version": "1.0.0",
+  "description": "Version based automerging",
+  "keywords": [
+    "GitHub",
+    "actions",
+    "javaScript",
+    "auto-merge",
+    "node"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/maikuru/downstream-version-automerge.git"
+  },
+  "bugs": {
+    "url": "https://github.com/maikuru/downstream-version-automerge/issues"
+  },
+  "homepage": "https://github.com/maikuru/downstream-version-automerge#readme",
+  "author": "Michael Lodge-Paolini <michael.lodge-paolini@wexinc.com>",
+  "license": "MIT",
+  "private": true,
+  "main": "index.js",
+  "scripts": {
+    "lint": "eslint \"src/**.js\" \"tests/**.js\" --fix",
+    "test": "eslint \"src/**.js\" \"tests/**.js\" && jest --coverage",
+    "test:debug": "node --inspect-brk node_modules/.bin/jest --runInBand",
+    "build": "ncc build src/main.js -o dist --source-map --license licenses.txt",
+    "precommit": "rimraf dist && yarn build && git add dist/"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "collectCoverageFrom": [
+      "src/index.js"
+    ],
+    "coverageThreshold": {
+      "global": {
+        "branches": 80,
+        "functions": 80,
+        "lines": 80,
+        "statements": 80
+      }
+    }
+  },
+  "dependencies": {
+    "@actions/core": "^1.2.6",
+    "@actions/exec": "^1.0.4",
+    "@actions/github": "^4.0.0"
+  },
+  "devDependencies": {
+    "@vercel/ncc": "^0.26.0",
+    "eslint": "^7.15.0",
+    "eslint-config-airbnb": "^18.2.1",
+    "eslint-config-prettier": "^7.0.0",
+    "eslint-plugin-import": "^2.22.1",
+    "eslint-plugin-jsx-a11y": "^6.4.1",
+    "eslint-plugin-prettier": "^3.3.0",
+    "eslint-plugin-react": "^7.21.5",
+    "eslint-plugin-react-hooks": "^4.2.0",
+    "husky": "^4.3.6",
+    "jest": "^26.6.3",
+    "prettier": "^2.2.1",
+    "rimraf": "^3.0.2"
+  }
+}

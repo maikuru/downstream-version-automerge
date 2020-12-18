@@ -1,0 +1,40 @@
+name: Down-Stream Version AutoMerger
+description: Version based auto merging 
+author: Michael Lodge-Paolini
+
+branding:
+  icon: git-merge
+  color: green
+
+inputs:
+  production-branch:
+    description: Primary branch matching the production environment.
+    required: true
+    default: master
+  development-branch:
+    description: Branch where active development is integrated into.
+    required: true
+    default: develop
+  merge-pattern:
+    description: Release Branch naming pattern
+    required: false
+    default: 'release/'
+  merge-strategy:
+    description: Branch merging strategy.  See Readme for allowed options.
+    required: true
+    default: merge-no-ff
+  repo-token:
+    description: API Token to use on your behalf
+    required: true
+
+outputs:
+  details:
+    description: Summary of the actions taken.
+
+runs:
+  using: 'node12'
+  pre: 'setup.js'
+  # pre-if: 'runner.os == linux'
+  main: 'index.js'
+  post: 'cleanup.js'
+  # post-if: 'runner.os == linux'
