@@ -1,13 +1,13 @@
 const core = require('@actions/core');
-const { GitHub, context } = require('@actions/github');
+const GitHub = require('@actions/github');
 
 async function run() {
   try {
     // Get authenticated GitHub client (Ocktokit): https://github.com/actions/toolkit/tree/master/packages/github#usage
-    const github = new GitHub(process.env.GITHUB_TOKEN);
+    const github = GitHub.getOctokit(process.env.GITHUB_TOKEN);
 
     // Get owner and repo from context of payload that triggered the action
-    const { owner: currentOwner, repo: currentRepo } = context.repo;
+    const { owner: currentOwner, repo: currentRepo } = GitHub.context.repo;
 
     const prodBranch = core.getInput('production-branch', { required: false }) || 'master';
     const devBranch = core.getInput('development-branch', { required: false }) || 'develop';
@@ -17,10 +17,7 @@ async function run() {
     const owner = core.getInput('owner', { required: false }) || currentOwner;
     const repo = core.getInput('repo', { required: false }) || currentRepo;
 
-    const branchList = await github.repos.listBranches({
-      owner,
-      repo
-    });
+    const { data: branchList } = await github.repos.listBranches({ owner, repo });
 
     console.log(prodBranch, devBranch, mergePattern, mergeStrategy, owner, repo, branchList);
 
