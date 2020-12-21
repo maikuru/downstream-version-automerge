@@ -1,21 +1,27 @@
-on: [push]
+on:
+  push:
+    branches:
+      - master
+      - 'release/*'
+      - develop
 
 jobs:
   version_auto_merge:
     runs-on: ubuntu-latest
     name: version automerge
     steps:
-      - name: AutoMerge Step
+      - name: Find Branch
         id: downstream
-        uses: maikuru/downstream-version-automerge@v1.0.0-alpha
+        uses: maikuru/downstream-version-automerge@master
         with:
           production-branch: 'master'
           development-branch: 'devlop'
           merge-pattern: 'release/'
-          merge-strategy: 'merge-no-ff'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-    # Use the output from the `hello` step
-      - name: Display the Action taken by the auto-merge
-        run: echo "Action Taken ${{ steps.downstream.outputs.details }}"
+      - uses: everlytic/branch-merge@1.1.0
+        with:
+          github_token: ${{ github.token }}
+          source_ref: ${{ steps.downstream.outputs.sourceBranch }}
+          target_branch: ${{ steps.downstream.outputs.targetBranch }}
+          commit_message_template: '[Automated] Merged {source_ref} into target {target_branch}'

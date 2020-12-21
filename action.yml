@@ -25,13 +25,11 @@ inputs:
     default: merge-no-ff
 
 outputs:
-  details:
-    description: Summary of the actions taken.
+  sourceBranch:
+    description: Branch to merge from
+  targetBranch:
+    description: Branch to checkout
 
 runs:
   using: 'node12'
   main: 'dist/index.js'
-#  pre: 'setup.js'
-#  pre-if: 'runner.os == linux'
-#  post: 'cleanup.js'
-#  post-if: 'runner.os == linux'
