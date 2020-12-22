@@ -6,29 +6,28 @@ the combined merge into.
 ## Inputs
 
 ### `production-branch`
-
-**Required** The primary branch matching the production environment. Default `"master"`.
+The primary branch matching the production environment. Default `"master"`.
 
 ### `development-branch`
-**Required** The branch where active development is integrated into.  Default `"develop"`.
+The branch where active development is integrated into.  Default `"develop"`.
 
-### `release-branch-pattern`
-**Required** The Release Branch naming pattern. Default `"'release/*'"`.
+### `release-pattern`
+The Release Branch naming pattern. Default `"'release/'"`.
 
-### `merge-strategy`
-**Required** The Branch merging strategy. Default `"merge-no-ff"`
+### `merge-message-template`
+Template to generate the commit message
+Default: `'Auto Merged {source_branch} into {target_branch}'`
 
-### `repo-token`
-
-## Secrets
-`GITHUB_TOKEN`
-Uses the GitHub Token to fetch the branches
+### `pr-title-template`
+Template to generate a PR title from
+Default: `'Failed Auto Merged {source_branch} into {target_branch}'`
 
 ## Environment Variables used,
-`GITHUB_API_URL`
-
+* `GITHUB_API_URL`
+* `GITHUB_TOKEN`
 
 ## Outputs
+none
 
 ### `details`
 Short description of the actions taken by this Action
@@ -37,12 +36,24 @@ Short description of the actions taken by this Action
 ## Example usage
 
 ```yaml
-  uses: maikuru/downstream-version-automerge@v1.0.0
-  - name: 
-    with:
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      production-branch: master
-      development-branch: develop
-      release-branch-pattern: release/*
-      merge-strategy: merge-no-ff
+on:
+  push:
+    branches:
+      - master
+      - 'release/**'
+      - develop'
+
+jobs:
+  version_auto_merge:
+    runs-on: ubuntu-latest
+    name: version automerge
+    steps:
+      - id: downstream
+        uses: maikuru/downstream-version-automerge@master
+        with:
+          production-branch: 'master'
+          development-branch: 'develop'
+          release-pattern: 'release/'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
