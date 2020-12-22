@@ -8886,13 +8886,15 @@ async function merge(source, target, config) {
   try {
     const commitMessage = config.mergeTpl.replace('{source_branch}', source).replace('{target_branch}', target);
 
-    await github.repos.merge({
+    const { data: result } = await github.repos.merge({
       owner: repo.owner,
       repo: repo.repo,
       base: target,
       head: source,
       commit_message: commitMessage
     });
+    console.log('commit details', result.commit);
+
     return true;
   } catch (e) {
     // Merge failed so do a PR instead so the developers can resolve the issue.
