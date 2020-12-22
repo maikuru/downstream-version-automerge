@@ -8823,9 +8823,9 @@ const GitHub = __webpack_require__(5438);
 const semver = __webpack_require__(1383);
 
 const MERGE_ACTIONS = {
-  NONE: 'none',
-  MERGE: 'merge',
-  REQUEST: 'request'
+  NONE: 'NONE',
+  MERGE: 'MERGE',
+  REQUEST: 'REQUEST'
 };
 
 /**
@@ -8834,13 +8834,10 @@ const MERGE_ACTIONS = {
  * @returns {Promise<array>}
  */
 async function getBranchHierarchy(config) {
-  // Get owner and repo from context of payload that triggered the action
-  const { owner: currentOwner, repo: currentRepo } = GitHub.context.repo;
-
   // Get authenticated GitHub client (Ocktokit): https://github.com/actions/toolkit/tree/master/packages/github#usage
   const github = GitHub.getOctokit(process.env.GITHUB_TOKEN);
 
-  const { data: branches } = await github.repos.listBranches({ owner: currentOwner, repo: currentRepo });
+  const { data: branches } = await github.repos.listBranches(GitHub.context.repo);
 
   // check to make sure the API returned the correct data type
   if (!Array.isArray(branches)) {
@@ -8868,16 +8865,14 @@ async function getBranchHierarchy(config) {
 
 /**
  *
- * @param config {prod: string, dev: string, pattern: string, strategy}
+ * @param config
  * @returns {Promise<{action: string, source: string, target: string}>}
  */
 async function findDownStreamBranch(config) {
   const branchHierarchy = await getBranchHierarchy(config);
-  const { ref: currentBranchRef } = GitHub.context.repo;
-  console.log(GitHub.context, currentBranchRef)
-  const srcBranch = currentBranchRef.split('refs/heads/')[1];
+  const srcBranch = GitHub.context.ref.split('refs/heads/')[1];
 
-  console.log(branchHierarchy, srcBranch, config);
+  console.log(`branchHierarchy: [${branchHierarchy.join(', ')}]`, `Source Branch: ${srcBranch}`);
   const nextBranchIndex = branchHierarchy.indexOf(srcBranch) + 1;
 
   if (nextBranchIndex === 0 || nextBranchIndex === branchHierarchy.length) {
@@ -8887,29 +8882,75 @@ async function findDownStreamBranch(config) {
       action: MERGE_ACTIONS.NONE
     };
   }
-  else {
-    return {
-      source: srcBranch,
-      target: branchHierarchy[nextBranchIndex],
-      action: MERGE_ACTIONS.MERGE
-    };
+
+  return {
+    source: srcBranch,
+    target: branchHierarchy[nextBranchIndex],
+    action: MERGE_ACTIONS.MERGE
+  };
+}
+
+/**
+ *
+ * @param source string
+ * @param target string
+ * @param config
+ * @returns {Promise<void>}
+ */
+async function merge(source, target, config) {
+  // Get authenticated GitHub client (Ocktokit): https://github.com/actions/toolkit/tree/master/packages/github#usage
+  const github = GitHub.getOctokit(process.env.GITHUB_TOKEN);
+  const { repo } = GitHub.context;
+
+  try {
+    const commitMessage = config.mergeTpl.replace('{source_branch}', source).replace('{target_branch}', target);
+
+    const { data: result } = await github.repos.merge({
+      owner: repo.owner,
+      repo: repo.repo,
+      base: target,
+      head: source,
+      commit_message: commitMessage
+    });
+
+    console.log('commit result', result);
+  } catch (e) {
+    // Merge failed so do a PR instead so the developers can resolve the issue.
+    const prTitle = config.prTpl.replace('{source_branch}', source).replace('{target_branch}', target);
+
+    const { data: result } = await github.pulls.create({
+      owner: repo.owner,
+      repo: repo.repo,
+      base: target,
+      head: source,
+      title: prTitle,
+      body: `${e.name}: ${e.message}`
+    });
+
+    console.log('pr result', result);
   }
 }
 
+/**
+ *
+ * @returns {Promise<void>}
+ */
 async function run() {
   try {
     const config = {
-      prod: core.getInput('production-branch', { required: false }) || 'master',
-      dev: core.getInput('development-branch', { required: false }) || '',
-      pattern: core.getInput('merge-pattern', { required: false }) || 'release/',
-      strategy: core.getInput('merge-strategy', { required: false }) || 'merge-no-ff'
+      prod: core.getInput('production-branch') || 'master',
+      dev: core.getInput('development-branch') || '',
+      pattern: core.getInput('release-pattern') || 'release/',
+      mergeTpl: core.getInput('merge-message-template'),
+      prTpl: core.getInput('pr-title-template')
     };
+    console.log('CONFIG Object', config);
 
     const mergeSpec = await findDownStreamBranch(config);
 
-    console.log(mergeSpec);
-
-    core.setOutput('details', '');
+    if (mergeSpec.action !== MERGE_ACTIONS.NONE) {
+      await merge(mergeSpec.source, mergeSpec.target, config);
+    }
   } catch (error) {
     core.setFailed(error.message);
   }

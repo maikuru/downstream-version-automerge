@@ -28,7 +28,7 @@
     "test:debug": "node --inspect-brk node_modules/.bin/jest --runInBand",
     "prebuild": "yarn clean",
     "build": "ncc build src/main.js -o dist --source-map --license licenses.txt",
-    "precommit": "yarn clean && yarn build && git add dist/",
+    "precommit": "yarn build && git add dist/",
     "preci": "rm -fr node_modules",
     "ci": "yarn install --frozen-lockfile"
   },

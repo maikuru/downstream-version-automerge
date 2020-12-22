@@ -32,7 +32,7 @@ const branchSample = {
       protected: false
     },
     {
-      name: 'release/1.2.1',
+      name: 'release/1.2.2',
       protected: false
     },
     {
@@ -56,14 +56,22 @@ const branchSample = {
 
 /* eslint-disable no-undef */
 describe('Valid Branch Workflows', () => {
+  let create;
   let listBranches;
+  let merge;
 
   beforeEach(() => {
     listBranches = jest.fn().mockReturnValueOnce(branchSample);
+    merge = jest.fn().mockReturnValueOnce({});
+    create = jest.fn().mockReturnValueOnce({});
 
-    GitHub.getOctokit = jest.fn().mockReturnValueOnce({
+    GitHub.getOctokit = jest.fn().mockReturnValue({
+      pulls: {
+        create
+      },
       repos: {
-        listBranches
+        listBranches,
+        merge
       }
     });
 
@@ -72,19 +80,19 @@ describe('Valid Branch Workflows', () => {
       .mockReturnValueOnce('master')
       .mockReturnValueOnce('develop')
       .mockReturnValueOnce('release/')
-      .mockReturnValueOnce('merge-no-ff')
-      .mockReturnValueOnce(null)
-      .mockReturnValueOnce(null);
+      .mockReturnValueOnce('Auto Merged {source_branch} into {target_branch}')
+      .mockReturnValueOnce('Failed Auto Merged {source_branch} into {target_branch}');
 
     GitHub.context.repo = {
       owner: 'owner',
-      repo: 'repo',
-      ref: ''
+      repo: 'repo'
     };
   });
 
   test('Master Branch Triggered', async () => {
-    GitHub.context.repo.ref = 'refs/heads/master';
+    const source = 'master';
+    const target = 'release/1.0.0-RC1';
+    GitHub.context.ref = `refs/heads/${source}`;
 
     await run();
 
@@ -92,10 +100,18 @@ describe('Valid Branch Workflows', () => {
       owner: 'owner',
       repo: 'repo'
     });
+    expect(merge).toHaveBeenCalledWith({
+      owner: 'owner',
+      repo: 'repo',
+      base: target,
+      head: source,
+      commit_message: `Auto Merged ${source} into ${target}`
+    });
+    expect(create).toHaveBeenCalledTimes(0);
   });
 
   test('Develop Branch Triggered', async () => {
-    GitHub.context.repo.ref = 'refs/heads/develop';
+    GitHub.context.ref = 'refs/heads/develop';
 
     await run();
 
@@ -103,10 +119,15 @@ describe('Valid Branch Workflows', () => {
       owner: 'owner',
       repo: 'repo'
     });
+    expect(merge).toHaveBeenCalledTimes(0);
+    expect(create).toHaveBeenCalledTimes(0);
   });
 
   test('middle Branch Triggered', async () => {
-    GitHub.context.repo.ref = 'refs/heads/release/1.2.1-beta1';
+    const source = 'release/1.2.1-beta1';
+    const target = 'release/1.2.2';
+
+    GitHub.context.ref = `refs/heads/${source}`;
 
     await run();
 
@@ -114,6 +135,15 @@ describe('Valid Branch Workflows', () => {
       owner: 'owner',
       repo: 'repo'
     });
+    expect(merge).toHaveBeenCalledWith({
+      owner: 'owner',
+      repo: 'repo',
+      base: source,
+      head: target,
+      commit_message: `Auto Merged ${source} into ${target}`
+    });
+    expect(create).toHaveBeenCalledTimes(0);
+    expect(core.setOutput).toHaveBeenCalledWith('sourceBranch', 'release/1.2.1-beta1');
   });
 });
 
@@ -125,8 +155,7 @@ describe('Invalid Ref Received', () => {
 
     GitHub.context.repo = {
       owner: 'owner',
-      repo: 'repo',
-      ref: 'refs/tags/release/2.0.0'
+      repo: 'repo'
     };
 
     GitHub.getOctokit = jest.fn().mockReturnValueOnce({
@@ -136,19 +165,20 @@ describe('Invalid Ref Received', () => {
     });
   });
 
-  test('I do things', async () => {
+  test('triggered by tag', async () => {
+    GitHub.context.ref = 'refs/tags/release/1.0.0';
+
     core.getInput = jest
       .fn()
       .mockReturnValueOnce('master')
       .mockReturnValueOnce('develop')
       .mockReturnValueOnce('release/')
-      .mockReturnValueOnce('merge-no-ff')
-      .mockReturnValueOnce(null)
-      .mockReturnValueOnce(null);
+      .mockReturnValueOnce('Auto Merged {source_branch} into {target_branch}')
+      .mockReturnValueOnce('Failed Auto Merged {source_branch} into {target_branch}');
 
     await run();
 
-    expect(core.setFailed).toHaveBeenCalled();
-    expect(listBranches).toHaveBeenCalledTimes(0);
+    expect(listBranches).toHaveBeenCalled();
+    expect(core.setFailed).toHaveBeenCalledTimes(0);
   });
 });

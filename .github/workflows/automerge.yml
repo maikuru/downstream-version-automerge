@@ -10,8 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     name: version automerge
     steps:
-      - name: Find Branch
-        id: downstream
+      - id: downstream
         uses: maikuru/downstream-version-automerge@master
         with:
           production-branch: 'master'
@@ -19,9 +18,3 @@ jobs:
           merge-pattern: 'release/'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - uses: everlytic/branch-merge@1.1.0
-        with:
-          github_token: ${{ github.token }}
-          source_ref: ${{ steps.downstream.outputs.sourceBranch }}
-          target_branch: ${{ steps.downstream.outputs.targetBranch }}
-          commit_message_template: '[Automated] Merged {source_ref} into target {target_branch}'
