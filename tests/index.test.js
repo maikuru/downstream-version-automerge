@@ -138,12 +138,11 @@ describe('Valid Branch Workflows', () => {
     expect(merge).toHaveBeenCalledWith({
       owner: 'owner',
       repo: 'repo',
-      base: source,
-      head: target,
+      base: target,
+      head: source,
       commit_message: `Auto Merged ${source} into ${target}`
     });
     expect(create).toHaveBeenCalledTimes(0);
-    expect(core.setOutput).toHaveBeenCalledWith('sourceBranch', 'release/1.2.1-beta1');
   });
 });
 
