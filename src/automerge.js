@@ -46,28 +46,14 @@ async function getBranchHierarchy(config) {
 /**
  *
  * @param config
- * @returns {Promise<{action: string, source: string, target: string}>}
+ * @returns {Promise<[string]>}
  */
-async function findDownStreamBranch(config) {
+async function findDownStreamBranches(config) {
   const branchHierarchy = await getBranchHierarchy(config);
   const srcBranch = GitHub.context.ref.split('refs/heads/')[1];
 
   // console.log(`branchHierarchy: [${branchHierarchy.join(', ')}]`, `Source Branch: ${srcBranch}`);
-  const nextBranchIndex = branchHierarchy.indexOf(srcBranch) + 1;
-
-  if (nextBranchIndex === 0 || nextBranchIndex === branchHierarchy.length) {
-    return {
-      source: srcBranch,
-      target: '',
-      action: MERGE_ACTIONS.NONE
-    };
-  }
-
-  return {
-    source: srcBranch,
-    target: branchHierarchy[nextBranchIndex],
-    action: MERGE_ACTIONS.MERGE
-  };
+  return branchHierarchy.slice(branchHierarchy.indexOf(srcBranch));
 }
 
 /**
@@ -75,7 +61,7 @@ async function findDownStreamBranch(config) {
  * @param source string
  * @param target string
  * @param config
- * @returns {Promise<void>}
+ * @returns {Promise<boolean>}
  */
 async function merge(source, target, config) {
   // Get authenticated GitHub client (Ocktokit): https://github.com/actions/toolkit/tree/master/packages/github#usage
@@ -94,6 +80,7 @@ async function merge(source, target, config) {
     });
 
     console.log('commit result', result);
+    return MERGE_ACTIONS.MERGE;
   } catch (e) {
     // Merge failed so do a PR instead so the developers can resolve the issue.
     const prTitle = config.prTpl.replace('{source_branch}', source).replace('{target_branch}', target);
@@ -108,6 +95,7 @@ async function merge(source, target, config) {
     });
 
     console.log('pr result', result);
+    return MERGE_ACTIONS.REQUEST;
   }
 }
 
@@ -126,11 +114,12 @@ async function run() {
     };
     // console.log('CONFIG Object', config);
 
-    const mergeSpec = await findDownStreamBranch(config);
+    const branchHierarchy = await findDownStreamBranches(config);
 
-    if (mergeSpec.action !== MERGE_ACTIONS.NONE) {
-      await merge(mergeSpec.source, mergeSpec.target, config);
-    }
+    branchHierarchy
+      .map((item, idx, _this) => ({ src: item, tgt: _this[idx + 1] }))
+      .filter((item) => item.tgt)
+      .every((mergeSpec) => merge(mergeSpec.src, mergeSpec.tgt, config) === MERGE_ACTIONS.MERGE);
   } catch (error) {
     core.setFailed(error.message);
   }
