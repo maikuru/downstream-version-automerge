@@ -8872,7 +8872,7 @@ async function findDownStreamBranch(config) {
   const branchHierarchy = await getBranchHierarchy(config);
   const srcBranch = GitHub.context.ref.split('refs/heads/')[1];
 
-  console.log(`branchHierarchy: [${branchHierarchy.join(', ')}]`, `Source Branch: ${srcBranch}`);
+  // console.log(`branchHierarchy: [${branchHierarchy.join(', ')}]`, `Source Branch: ${srcBranch}`);
   const nextBranchIndex = branchHierarchy.indexOf(srcBranch) + 1;
 
   if (nextBranchIndex === 0 || nextBranchIndex === branchHierarchy.length) {
@@ -8944,7 +8944,7 @@ async function run() {
       mergeTpl: core.getInput('merge-message-template'),
       prTpl: core.getInput('pr-title-template')
     };
-    console.log('CONFIG Object', config);
+    // console.log('CONFIG Object', config);
 
     const mergeSpec = await findDownStreamBranch(config);
 

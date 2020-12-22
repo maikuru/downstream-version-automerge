@@ -2,8 +2,8 @@ on:
   push:
     branches:
       - master
-      - 'release/*'
-      - develop
+      - 'release/**'
+      - develop'
 
 jobs:
   version_auto_merge:
@@ -14,7 +14,7 @@ jobs:
         uses: maikuru/downstream-version-automerge@master
         with:
           production-branch: 'master'
-          development-branch: 'devlop'
-          merge-pattern: 'release/'
+          development-branch: 'develop'
+          release-pattern: 'release/'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
