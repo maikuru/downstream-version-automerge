@@ -8874,6 +8874,7 @@ async function getBranchHierarchy(config) {
 async function findDownStreamBranch(config) {
   const branchHierarchy = await getBranchHierarchy(config);
   const { ref: currentBranchRef } = GitHub.context.repo;
+  console.log(GitHub.context, currentBranchRef)
   const srcBranch = currentBranchRef.split('refs/heads/')[1];
 
   console.log(branchHierarchy, srcBranch, config);
