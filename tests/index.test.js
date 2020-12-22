@@ -61,9 +61,9 @@ describe('Valid Branch Workflows', () => {
   let merge;
 
   beforeEach(() => {
-    listBranches = jest.fn().mockReturnValueOnce(branchSample);
-    merge = jest.fn().mockReturnValueOnce({});
-    create = jest.fn().mockReturnValueOnce({});
+    listBranches = jest.fn().mockReturnValue(branchSample);
+    merge = jest.fn().mockReturnValue({});
+    create = jest.fn().mockReturnValue({});
 
     GitHub.getOctokit = jest.fn().mockReturnValue({
       pulls: {
@@ -107,6 +107,7 @@ describe('Valid Branch Workflows', () => {
       head: source,
       commit_message: `Auto Merged ${source} into ${target}`
     });
+    expect(merge).toHaveBeenCalledTimes(7);
     expect(create).toHaveBeenCalledTimes(0);
   });
 
