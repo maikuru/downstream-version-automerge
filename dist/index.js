@@ -8822,12 +8822,6 @@ const core = __webpack_require__(2186);
 const GitHub = __webpack_require__(5438);
 const semver = __webpack_require__(1383);
 
-const MERGE_ACTIONS = {
-  NONE: 'NONE',
-  MERGE: 'MERGE',
-  REQUEST: 'REQUEST'
-};
-
 /**
  *
  * @param config
@@ -8891,7 +8885,7 @@ async function merge(source, target, config) {
   try {
     const commitMessage = config.mergeTpl.replace('{source_branch}', source).replace('{target_branch}', target);
 
-    const { data: result } = await github.repos.merge({
+    await github.repos.merge({
       owner: repo.owner,
       repo: repo.repo,
       base: target,
@@ -8899,8 +8893,7 @@ async function merge(source, target, config) {
       commit_message: commitMessage
     });
 
-    console.log('commit result', result);
-    return MERGE_ACTIONS.MERGE;
+    return true;
   } catch (e) {
     // Merge failed so do a PR instead so the developers can resolve the issue.
     const prTitle = config.prTpl.replace('{source_branch}', source).replace('{target_branch}', target);
@@ -8915,7 +8908,7 @@ async function merge(source, target, config) {
     });
 
     console.log('pr result', result);
-    return MERGE_ACTIONS.REQUEST;
+    return false;
   }
 }
 
@@ -8932,14 +8925,14 @@ async function run() {
       mergeTpl: core.getInput('merge-message-template'),
       prTpl: core.getInput('pr-title-template')
     };
-    // console.log('CONFIG Object', config);
 
     const branchHierarchy = await findDownStreamBranches(config);
 
-    branchHierarchy
+    const mergeSpec = branchHierarchy
       .map((item, idx, _this) => ({ src: item, tgt: _this[idx + 1] }))
-      .filter((item) => item.tgt)
-      .every((mergeSpec) => merge(mergeSpec.src, mergeSpec.tgt, config) === MERGE_ACTIONS.MERGE);
+      .filter((item) => item.tgt);
+
+    mergeSpec.every((item) => merge(item.src, item.tgt, config));
   } catch (error) {
     core.setFailed(error.message);
   }
