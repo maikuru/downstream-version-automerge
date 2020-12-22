@@ -1,0 +1,20 @@
+on:
+  push:
+    branches:
+      - master
+      - 'release/**'
+      - develop'
+
+jobs:
+  version_auto_merge:
+    runs-on: ubuntu-latest
+    name: version automerge
+    steps:
+      - id: downstream
+        uses: maikuru/downstream-version-automerge@master
+        with:
+          production-branch: 'master'
+          development-branch: 'develop'
+          release-pattern: 'release/'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
