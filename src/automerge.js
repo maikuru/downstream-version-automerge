@@ -62,6 +62,7 @@ async function merge(source, target, config) {
   const github = GitHub.getOctokit(process.env.GITHUB_TOKEN);
   const { repo } = GitHub.context;
 
+  console.log(`merge started: ${source} => ${target}`);
   try {
     const commitMessage = config.mergeTpl.replace('{source_branch}', source).replace('{target_branch}', target);
 
@@ -72,10 +73,12 @@ async function merge(source, target, config) {
       head: source,
       commit_message: commitMessage
     });
-
     return true;
   } catch (e) {
     // Merge failed so do a PR instead so the developers can resolve the issue.
+    console.log(`merge failed: ${e.message}`);
+    console.log('PR to be created instead');
+
     const prTitle = config.prTpl.replace('{source_branch}', source).replace('{target_branch}', target);
 
     const { data: result } = await github.pulls.create({
@@ -112,6 +115,7 @@ async function run() {
       .map((item, idx, _this) => ({ src: item, tgt: _this[idx + 1] }))
       .filter((item) => item.tgt);
 
+    console.log('merges expected', mergeSpec);
     mergeSpec.every((item) => merge(item.src, item.tgt, config));
   } catch (error) {
     core.setFailed(error.message);
