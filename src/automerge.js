@@ -55,7 +55,7 @@ async function findDownStreamBranches(config) {
  * @param source string
  * @param target string
  * @param config
- * @returns {Promise<boolean>}
+ * @returns boolean
  */
 async function merge(source, target, config) {
   // Get authenticated GitHub client (Ocktokit): https://github.com/actions/toolkit/tree/master/packages/github#usage
@@ -63,16 +63,20 @@ async function merge(source, target, config) {
   const { repo } = GitHub.context;
 
   console.log(`merge started: ${source} => ${target}`);
+
   try {
     const commitMessage = config.mergeTpl.replace('{source_branch}', source).replace('{target_branch}', target);
 
-    await github.repos.merge({
+    const { data: result } = await github.repos.merge({
       owner: repo.owner,
       repo: repo.repo,
       base: target,
       head: source,
       commit_message: commitMessage
     });
+
+    console.log('commit details', result.commit);
+
     return true;
   } catch (e) {
     // Merge failed so do a PR instead so the developers can resolve the issue.
@@ -81,16 +85,21 @@ async function merge(source, target, config) {
 
     const prTitle = config.prTpl.replace('{source_branch}', source).replace('{target_branch}', target);
 
-    const { data: result } = await github.pulls.create({
-      owner: repo.owner,
-      repo: repo.repo,
-      base: target,
-      head: source,
-      title: prTitle,
-      body: `${e.name}: ${e.message}`
-    });
+    try {
+      const { data: result } = await github.pulls.create({
+        owner: repo.owner,
+        repo: repo.repo,
+        base: target,
+        head: source,
+        title: prTitle,
+        body: `${e.name}: ${e.message}`
+      });
 
-    console.log('pr result', result);
+      console.log('pr result', result);
+    } catch (e2) {
+      core.setFailed(e2.message);
+    }
+
     return false;
   }
 }
@@ -116,7 +125,15 @@ async function run() {
       .filter((item) => item.tgt);
 
     console.log('merges expected', mergeSpec);
-    mergeSpec.every((item) => merge(item.src, item.tgt, config));
+    for (let i = 0; i < mergeSpec.length; i += 1) {
+      const item = mergeSpec[i];
+
+      /*eslint-disable */
+      if (!(await merge(item.src, item.tgt, config))) {
+        break;
+      }
+      /* eslint-enable */
+    }
   } catch (error) {
     core.setFailed(error.message);
   }

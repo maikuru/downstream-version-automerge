@@ -62,7 +62,31 @@ describe('Valid Branch Workflows', () => {
 
   beforeEach(() => {
     listBranches = jest.fn().mockReturnValue(branchSample);
-    merge = jest.fn().mockReturnValue({});
+    merge = jest.fn().mockReturnValue({
+      data: {
+        commit: {
+          author: {
+            name: 'github-actions[bot]',
+            email: '41898282+github-actions[bot]@users.noreply.github.com',
+            date: '2020-12-22T16:17:48Z'
+          },
+          committer: {
+            name: 'GitHub',
+            email: 'noreply@github.com',
+            date: '2020-12-22T16:17:48Z'
+          },
+          message: 'Auto Merged master into release/1.0.0-RC1',
+          tree: {
+            sha: '60ec259b2bdf199b76d00c1dc3b253a0d749b5ac',
+            url:
+              'https://api.github.com/repos/maikuru/downstream-version-automerge/git/trees/60ec259b2bdf199b76d00c1dc3b253a0d749b5ac'
+          },
+          url:
+            'https://api.github.com/repos/maikuru/downstream-version-automerge/git/commits/20c71f4872e8d88cb0d8a5209c7a0e3df8fa5549',
+          comment_count: 0
+        }
+      }
+    });
     create = jest.fn().mockReturnValue({});
 
     GitHub.getOctokit = jest.fn().mockReturnValue({
