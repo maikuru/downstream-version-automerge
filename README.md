@@ -18,8 +18,12 @@ The Release Branch naming pattern. Default `"'release/'"`.
 Template to generate the commit message
 Default: `'Auto Merged {source_branch} into {target_branch}'`
 
+### `pr-on-failed-merge`
+(yes/no) If a merge fails, create a pull request instead.
+Default: yes
+
 ### `pr-title-template`
-Template to generate a PR title from
+Template to generate a PR title from, only used when `pr-on-failed-merge` is set to `yes`
 Default: `'Failed Auto Merged {source_branch} into {target_branch}'`
 
 ## Environment Variables used,
@@ -27,7 +31,6 @@ Default: `'Failed Auto Merged {source_branch} into {target_branch}'`
 * `GITHUB_TOKEN`
 
 ## Outputs
-none
 
 ### `details`
 Short description of the actions taken by this Action
@@ -41,7 +44,7 @@ on:
     branches:
       - master
       - 'release/**'
-      - develop'
+      - develop
 
 jobs:
   version_auto_merge:
@@ -49,7 +52,7 @@ jobs:
     name: version automerge
     steps:
       - id: downstream
-        uses: maikuru/downstream-version-automerge@master
+        uses: maikuru/downstream-version-automerge@v1
         with:
           production-branch: 'master'
           development-branch: 'develop'
