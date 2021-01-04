@@ -8872,56 +8872,66 @@ async function findDownStreamBranches(config) {
 
 /**
  *
- * @param source string
- * @param target string
+ * @param source
+ * @param target
  * @param config
- * @returns boolean
+ * @returns {Promise<boolean>}
  */
 async function merge(source, target, config) {
   // Get authenticated GitHub client (Ocktokit): https://github.com/actions/toolkit/tree/master/packages/github#usage
   const github = GitHub.getOctokit(process.env.GITHUB_TOKEN);
   const { repo } = GitHub.context;
 
-  console.log(`merge started: ${source} => ${target}`);
+  let result = true;
 
   try {
     const commitMessage = config.mergeTpl.replace('{source_branch}', source).replace('{target_branch}', target);
 
-    const { data: result } = await github.repos.merge({
+    await github.repos.merge({
       owner: repo.owner,
       repo: repo.repo,
       base: target,
       head: source,
       commit_message: commitMessage
     });
-
-    console.log('commit details', result.commit);
-
-    return true;
   } catch (e) {
-    // Merge failed so do a PR instead so the developers can resolve the issue.
-    console.log(`merge failed: ${e.message}`);
-    console.log('PR to be created instead');
+    // console.log(`merge failed: ${e.message}`);
+    result = false;
+  }
 
+  return result;
+}
+
+/**
+ *
+ * @param source
+ * @param target
+ * @param config
+ * @returns {Promise<boolean>}
+ */
+async function mergeRequest(source, target, config) {
+  // Get authenticated GitHub client (Ocktokit): https://github.com/actions/toolkit/tree/master/packages/github#usage
+  const github = GitHub.getOctokit(process.env.GITHUB_TOKEN);
+  const { repo } = GitHub.context;
+
+  let result = true;
+
+  try {
     const prTitle = config.prTpl.replace('{source_branch}', source).replace('{target_branch}', target);
 
-    try {
-      const { data: result } = await github.pulls.create({
-        owner: repo.owner,
-        repo: repo.repo,
-        base: target,
-        head: source,
-        title: prTitle,
-        body: `${e.name}: ${e.message}`
-      });
-
-      console.log('pr result', result);
-    } catch (e2) {
-      core.setFailed(e2.message);
-    }
-
-    return false;
+    await github.pulls.create({
+      owner: repo.owner,
+      repo: repo.repo,
+      base: target,
+      head: source,
+      title: prTitle
+    });
+  } catch (e) {
+    // console.log(`merge failed: ${e.message}\n\nPR created instead`);
+    result = false;
   }
+
+  return result;
 }
 
 /**
@@ -8929,34 +8939,44 @@ async function merge(source, target, config) {
  * @returns {Promise<void>}
  */
 async function run() {
-  try {
-    const config = {
-      prod: core.getInput('production-branch') || 'master',
-      dev: core.getInput('development-branch') || '',
-      pattern: core.getInput('release-pattern') || 'release/',
-      mergeTpl: core.getInput('merge-message-template'),
-      prTpl: core.getInput('pr-title-template')
-    };
+  const actionsTaken = [];
 
-    const branchHierarchy = await findDownStreamBranches(config);
+  const config = {
+    prod: core.getInput('production-branch') || 'master',
+    dev: core.getInput('development-branch') || '',
+    pattern: core.getInput('release-pattern') || 'release/',
+    mergeTpl: core.getInput('merge-message-template'),
+    prOnFail: core.getInput('pr-on-failed-merge').trim().toLowerCase() === 'yes',
+    prTpl: core.getInput('pr-title-template')
+  };
 
-    const mergeSpec = branchHierarchy
-      .map((item, idx, _this) => ({ src: item, tgt: _this[idx + 1] }))
-      .filter((item) => item.tgt);
+  const branchHierarchy = await findDownStreamBranches(config);
 
-    console.log('merges expected', mergeSpec);
-    for (let i = 0; i < mergeSpec.length; i += 1) {
-      const item = mergeSpec[i];
+  const mergeSpec = branchHierarchy
+    .map((item, idx, _this) => ({ src: item, tgt: _this[idx + 1] }))
+    .filter((item) => item.tgt);
 
-      /*eslint-disable */
-      if (!(await merge(item.src, item.tgt, config))) {
-        break;
-      }
-      /* eslint-enable */
+  // normally one might want to continue the chain with .every(), but the mergeSpec must
+  // be done serially to properly terminate the chain for a failed merge or if a PR should
+  // be created due to a failed merge, which also terminates the downstream auto-merge process
+
+  for (let i = 0; i < mergeSpec.length; i += 1) {
+    const item = mergeSpec[i];
+
+    /* eslint-disable no-await-in-loop */
+    if (await merge(item.src, item.tgt, config)) {
+      actionsTaken.push(`Merged ${item.src} into ${item.tgt}`);
+    } else if (config.prOnFail && (await mergeRequest(item.src, item.tgt, config))) {
+      actionsTaken.push(`Pull Request Created for ${item.src} into ${item.tgt}`);
+      break; // out of mergeSpec loop since a PR was
+    } else {
+      actionsTaken.push(`unable merge or create a merge request for ${item.src} into ${item.tgt}`);
+      core.setFailed(`Both Merge and Pull Requests failed`);
+      break;
     }
-  } catch (error) {
-    core.setFailed(error.message);
+    /* eslint-enable no-await-in-loop */
   }
+  core.setOutput('details', actionsTaken.join('\n'));
 }
 
 module.exports = run;
