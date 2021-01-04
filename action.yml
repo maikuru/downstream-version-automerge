@@ -12,8 +12,8 @@ inputs:
     required: true
     default: master
   development-branch:
-    description: Branch where active development is integrated into.
-    required: true
+    description: Optional Branch where active development is integrated into.
+    required: false
     default: develop
   release-pattern:
     description: Release Branch naming pattern
@@ -23,18 +23,18 @@ inputs:
     description: Template to generate the commit message, see README.md for more info
     required: false
     default: Auto Merged {source_branch} into {target_branch}
+  pr-on-failed-merge:
+    description: (yes/no) If a merge fails, create a pull request instead.
+    required: false
+    default: yes
   pr-title-template:
     description: Template to generate a PR title from, see README.md for more info
     required: false
     default: Failed Auto Merged {source_branch} into {target_branch}
 
 outputs:
-  sourceBranch:
-    description: Branch to merge from
-  targetBranch:
-    description: Branch to merge into
-  action:
-    description: What action occurred
+  details:
+    description: details of what this action performed
 
 runs:
   using: 'node12'
