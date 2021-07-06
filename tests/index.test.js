@@ -1,6 +1,6 @@
 const core = require('@actions/core');
 const GitHub = require('@actions/github');
-const run = require('../src/automerge.js');
+const run = require('../src/automerge');
 
 jest.mock('@actions/core');
 jest.mock('@actions/github');
@@ -78,11 +78,9 @@ describe('Valid Branch Workflows', () => {
           message: 'Auto Merged master into release/1.0.0-RC1',
           tree: {
             sha: '60ec259b2bdf199b76d00c1dc3b253a0d749b5ac',
-            url:
-              'https://api.github.com/repos/maikuru/downstream-version-automerge/git/trees/60ec259b2bdf199b76d00c1dc3b253a0d749b5ac'
+            url: 'https://api.github.com/repos/maikuru/downstream-version-automerge/git/trees/60ec259b2bdf199b76d00c1dc3b253a0d749b5ac'
           },
-          url:
-            'https://api.github.com/repos/maikuru/downstream-version-automerge/git/commits/20c71f4872e8d88cb0d8a5209c7a0e3df8fa5549',
+          url: 'https://api.github.com/repos/maikuru/downstream-version-automerge/git/commits/20c71f4872e8d88cb0d8a5209c7a0e3df8fa5549',
           comment_count: 0
         }
       }
@@ -235,11 +233,9 @@ describe('No Develop branch', () => {
             message: 'Auto Merged master into release/1.0.0-RC1',
             tree: {
               sha: '60ec259b2bdf199b76d00c1dc3b253a0d749b5ac',
-              url:
-                'https://api.github.com/repos/maikuru/downstream-version-automerge/git/trees/60ec259b2bdf199b76d00c1dc3b253a0d749b5ac'
+              url: 'https://api.github.com/repos/maikuru/downstream-version-automerge/git/trees/60ec259b2bdf199b76d00c1dc3b253a0d749b5ac'
             },
-            url:
-              'https://api.github.com/repos/maikuru/downstream-version-automerge/git/commits/20c71f4872e8d88cb0d8a5209c7a0e3df8fa5549',
+            url: 'https://api.github.com/repos/maikuru/downstream-version-automerge/git/commits/20c71f4872e8d88cb0d8a5209c7a0e3df8fa5549',
             comment_count: 0
           }
         }
