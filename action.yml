@@ -10,7 +10,7 @@ inputs:
   production-branch:
     description: Primary branch matching the production environment.
     required: true
-    default: master
+    default: main
   development-branch:
     description: Optional Branch where active development is integrated into.
     required: false

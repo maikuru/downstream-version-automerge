@@ -1,7 +1,7 @@
 on:
   push:
     branches:
-      - master
+      - main
       - 'release/**'
       - develop'
 
@@ -11,9 +11,9 @@ jobs:
     name: version automerge
     steps:
       - id: downstream
-        uses: maikuru/downstream-version-automerge@master
+        uses: maikuru/downstream-version-automerge@main
         with:
-          production-branch: 'master'
+          production-branch: 'main'
           development-branch: 'develop'
           release-pattern: 'release/'
         env:
