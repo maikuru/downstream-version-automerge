@@ -1,9 +1,9 @@
-const core = require('@actions/core');
-const GitHub = require('@actions/github');
-const run = require('../src/automerge');
+const core = require('@actions/core')
+const GitHub = require('@actions/github')
+const run = require('../src/automerge')
 
-jest.mock('@actions/core');
-jest.mock('@actions/github');
+jest.mock('@actions/core')
+jest.mock('@actions/github')
 
 const branchSample = {
   data: [
@@ -52,16 +52,15 @@ const branchSample = {
       protected: false
     }
   ]
-};
+}
 
-/* eslint-disable no-undef */
 describe('Valid Branch Workflows', () => {
-  let ghCreate;
-  let ghListBranches;
-  let ghMerge;
+  let ghCreate
+  let ghListBranches
+  let ghMerge
 
   beforeEach(() => {
-    ghListBranches = jest.fn().mockReturnValue(branchSample);
+    ghListBranches = jest.fn().mockReturnValue(branchSample)
     ghMerge = jest.fn().mockReturnValue({
       data: {
         commit: {
@@ -84,18 +83,20 @@ describe('Valid Branch Workflows', () => {
           comment_count: 0
         }
       }
-    });
-    ghCreate = jest.fn().mockReturnValue({});
+    })
+    ghCreate = jest.fn().mockReturnValue({})
 
     GitHub.getOctokit = jest.fn().mockReturnValue({
-      pulls: {
-        create: ghCreate
-      },
-      repos: {
-        listBranches: ghListBranches,
-        merge: ghMerge
+      rest: {
+        pulls: {
+          create: ghCreate
+        },
+        repos: {
+          listBranches: ghListBranches,
+          merge: ghMerge
+        }
       }
-    });
+    })
 
     core.getInput = jest
       .fn()
@@ -104,76 +105,76 @@ describe('Valid Branch Workflows', () => {
       .mockReturnValueOnce('release/')
       .mockReturnValueOnce('Auto Merged {source_branch} into {target_branch}')
       .mockReturnValueOnce('yes')
-      .mockReturnValueOnce('Failed Auto Merged {source_branch} into {target_branch}');
+      .mockReturnValueOnce('Failed Auto Merged {source_branch} into {target_branch}')
 
     GitHub.context.repo = {
       owner: 'owner',
       repo: 'repo'
-    };
-  });
+    }
+  })
 
   test('Master Branch Triggered', async () => {
-    const source = 'master';
-    const target = 'release/1.0.0-RC1';
-    GitHub.context.ref = `refs/heads/${source}`;
+    const source = 'master'
+    const target = 'release/1.0.0-RC1'
+    GitHub.context.ref = `refs/heads/${source}`
 
-    await run();
+    await run()
 
     expect(ghListBranches).toHaveBeenCalledWith({
       owner: 'owner',
       repo: 'repo'
-    });
+    })
     expect(ghMerge).toHaveBeenCalledWith({
       owner: 'owner',
       repo: 'repo',
       base: target,
       head: source,
       commit_message: `Auto Merged ${source} into ${target}`
-    });
-    expect(ghMerge).toHaveBeenCalledTimes(7);
-    expect(ghCreate).toHaveBeenCalledTimes(0);
-  });
+    })
+    expect(ghMerge).toHaveBeenCalledTimes(7)
+    expect(ghCreate).toHaveBeenCalledTimes(0)
+  })
 
   test('Develop Branch Triggered', async () => {
-    GitHub.context.ref = 'refs/heads/develop';
+    GitHub.context.ref = 'refs/heads/develop'
 
-    await run();
+    await run()
 
     expect(ghListBranches).toHaveBeenCalledWith({
       owner: 'owner',
       repo: 'repo'
-    });
-    expect(ghMerge).toHaveBeenCalledTimes(0);
-    expect(ghCreate).toHaveBeenCalledTimes(0);
-  });
+    })
+    expect(ghMerge).toHaveBeenCalledTimes(0)
+    expect(ghCreate).toHaveBeenCalledTimes(0)
+  })
 
   test('Middle Branch Triggered', async () => {
-    const source = 'release/1.2.1-beta1';
-    const target = 'release/1.2.2';
+    const source = 'release/1.2.1-beta1'
+    const target = 'release/1.2.2'
 
-    GitHub.context.ref = `refs/heads/${source}`;
+    GitHub.context.ref = `refs/heads/${source}`
 
-    await run();
+    await run()
 
     expect(ghListBranches).toHaveBeenCalledWith({
       owner: 'owner',
       repo: 'repo'
-    });
+    })
     expect(ghMerge).toHaveBeenCalledWith({
       owner: 'owner',
       repo: 'repo',
       base: target,
       head: source,
       commit_message: `Auto Merged ${source} into ${target}`
-    });
-    expect(ghCreate).toHaveBeenCalledTimes(0);
-  });
-});
+    })
+    expect(ghCreate).toHaveBeenCalledTimes(0)
+  })
+})
 
 describe('No Develop branch', () => {
-  let ghCreate;
-  let ghListBranches;
-  let ghMerge;
+  let ghCreate
+  let ghListBranches
+  let ghMerge
 
   beforeEach(() => {
     ghListBranches = jest
@@ -214,7 +215,7 @@ describe('No Develop branch', () => {
           }
         ]
       })
-      .mockName('listBranches');
+      .mockName('listBranches')
     ghMerge = jest
       .fn()
       .mockReturnValueOnce({
@@ -241,19 +242,21 @@ describe('No Develop branch', () => {
         }
       })
       .mockImplementationOnce(() => {
-        throw new Error("I'm a tea pot");
-      });
-    ghCreate = jest.fn().mockReturnValue({ data: {} });
+        throw new Error("I'm a tea pot")
+      })
+    ghCreate = jest.fn().mockReturnValue({ data: {} })
 
     GitHub.getOctokit = jest.fn().mockReturnValue({
-      pulls: {
-        create: ghCreate
-      },
-      repos: {
-        listBranches: ghListBranches,
-        merge: ghMerge
+      rest: {
+        pulls: {
+          create: ghCreate
+        },
+        repos: {
+          listBranches: ghListBranches,
+          merge: ghMerge
+        }
       }
-    });
+    })
 
     core.getInput = jest
       .fn()
@@ -262,56 +265,56 @@ describe('No Develop branch', () => {
       .mockReturnValueOnce('release/')
       .mockReturnValueOnce('Auto Merged {source_branch} into {target_branch}')
       .mockReturnValueOnce('yes')
-      .mockReturnValueOnce('Failed Auto Merged {source_branch} into {target_branch}');
+      .mockReturnValueOnce('Failed Auto Merged {source_branch} into {target_branch}')
 
     GitHub.context.repo = {
       owner: 'owner',
       repo: 'repo'
-    };
-  });
+    }
+  })
 
   test('Master Branch Triggered', async () => {
-    const source = 'master';
-    const target = 'release/1.0.0-RC1';
-    GitHub.context.ref = `refs/heads/${source}`;
+    const source = 'master'
+    const target = 'release/1.0.0-RC1'
+    GitHub.context.ref = `refs/heads/${source}`
 
-    await run();
+    await run()
 
     expect(ghListBranches).toHaveBeenCalledWith({
       owner: 'owner',
       repo: 'repo'
-    });
+    })
     expect(ghMerge).toHaveBeenCalledWith({
       owner: 'owner',
       repo: 'repo',
       base: target,
       head: source,
       commit_message: `Auto Merged ${source} into ${target}`
-    });
-    expect(ghMerge).toHaveBeenCalledTimes(2);
-    expect(ghCreate).toHaveBeenCalledTimes(1);
-  });
+    })
+    expect(ghMerge).toHaveBeenCalledTimes(2)
+    expect(ghCreate).toHaveBeenCalledTimes(1)
+  })
 
   test('Develop Branch Triggered', async () => {
-    GitHub.context.ref = 'refs/heads/develop';
+    GitHub.context.ref = 'refs/heads/develop'
 
-    await run();
+    await run()
 
     expect(ghListBranches).toHaveBeenCalledWith({
       owner: 'owner',
       repo: 'repo'
-    });
-    expect(ghMerge).toHaveBeenCalledTimes(0);
-    expect(ghCreate).toHaveBeenCalledTimes(0);
-  });
+    })
+    expect(ghMerge).toHaveBeenCalledTimes(0)
+    expect(ghCreate).toHaveBeenCalledTimes(0)
+  })
 
   test('Middle Branch Triggered', async () => {
-    const source = 'release/1.2.1-beta1';
-    const target = 'release/1.2.2';
+    const source = 'release/1.2.1-beta1'
+    const target = 'release/1.2.2'
 
-    GitHub.context.ref = `refs/heads/${source}`;
+    GitHub.context.ref = `refs/heads/${source}`
 
-    await run();
+    await run()
 
     expect(ghMerge).toHaveBeenCalledWith({
       owner: 'owner',
@@ -319,31 +322,33 @@ describe('No Develop branch', () => {
       base: target,
       head: source,
       commit_message: `Auto Merged ${source} into ${target}`
-    });
-    expect(ghCreate).toHaveBeenCalledTimes(1);
-  });
-});
+    })
+    expect(ghCreate).toHaveBeenCalledTimes(1)
+  })
+})
 
 describe('Invalid Ref Received', () => {
-  let ghListBranches;
+  let ghListBranches
 
   beforeEach(() => {
-    ghListBranches = jest.fn().mockReturnValueOnce(branchSample);
+    ghListBranches = jest.fn().mockReturnValueOnce(branchSample)
 
     GitHub.context.repo = {
       owner: 'owner',
       repo: 'repo'
-    };
+    }
 
     GitHub.getOctokit = jest.fn().mockReturnValueOnce({
-      repos: {
-        listBranches: ghListBranches
+      rest: {
+        repos: {
+          listBranches: ghListBranches
+        }
       }
-    });
-  });
+    })
+  })
 
   test('triggered by tag', async () => {
-    GitHub.context.ref = 'refs/tags/release/1.0.0';
+    GitHub.context.ref = 'refs/tags/release/1.0.0'
 
     core.getInput = jest
       .fn()
@@ -352,11 +357,11 @@ describe('Invalid Ref Received', () => {
       .mockReturnValueOnce('release/')
       .mockReturnValueOnce('Auto Merged {source_branch} into {target_branch}')
       .mockReturnValueOnce('yes')
-      .mockReturnValueOnce('Failed Auto Merged {source_branch} into {target_branch}');
+      .mockReturnValueOnce('Failed Auto Merged {source_branch} into {target_branch}')
 
-    await run();
+    await run()
 
-    expect(ghListBranches).toHaveBeenCalled();
-    expect(core.setFailed).toHaveBeenCalledTimes(0);
-  });
-});
+    expect(ghListBranches).toHaveBeenCalled()
+    expect(core.setFailed).toHaveBeenCalledTimes(0)
+  })
+})

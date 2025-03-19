@@ -1,5 +1,5 @@
-const run = require('./automerge');
+const run = require('./automerge')
 
 if (require.main === module) {
-  run();
+  run()
 }
