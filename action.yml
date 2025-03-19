@@ -1,5 +1,5 @@
 name: Down-Stream Version AutoMerger
-description: Version based auto merging 
+description: Version based auto merging
 author: Michael Lodge-Paolini
 
 branding:
@@ -37,5 +37,5 @@ outputs:
     description: details of what this action performed
 
 runs:
-  using: 'node12'
+  using: 'node20'
   main: 'dist/index.js'
