@@ -87,12 +87,14 @@ describe('Valid Branch Workflows', () => {
     ghCreate = jest.fn().mockReturnValue({})
 
     GitHub.getOctokit = jest.fn().mockReturnValue({
-      pulls: {
-        create: ghCreate
-      },
-      repos: {
-        listBranches: ghListBranches,
-        merge: ghMerge
+      rest: {
+        pulls: {
+          create: ghCreate
+        },
+        repos: {
+          listBranches: ghListBranches,
+          merge: ghMerge
+        }
       }
     })
 
@@ -245,12 +247,14 @@ describe('No Develop branch', () => {
     ghCreate = jest.fn().mockReturnValue({ data: {} })
 
     GitHub.getOctokit = jest.fn().mockReturnValue({
-      pulls: {
-        create: ghCreate
-      },
-      repos: {
-        listBranches: ghListBranches,
-        merge: ghMerge
+      rest: {
+        pulls: {
+          create: ghCreate
+        },
+        repos: {
+          listBranches: ghListBranches,
+          merge: ghMerge
+        }
       }
     })
 
@@ -335,8 +339,10 @@ describe('Invalid Ref Received', () => {
     }
 
     GitHub.getOctokit = jest.fn().mockReturnValueOnce({
-      repos: {
-        listBranches: ghListBranches
+      rest: {
+        repos: {
+          listBranches: ghListBranches
+        }
       }
     })
   })

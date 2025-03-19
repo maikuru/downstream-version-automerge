@@ -11,8 +11,8 @@ async function getBranchHierarchy(config) {
   // Get authenticated GitHub client (Ocktokit): https://github.com/actions/toolkit/tree/master/packages/github#usage
   const github = GitHub.getOctokit(process.env.GITHUB_TOKEN)
 
-  const { data: branches } = await github.repos.listBranches(GitHub.context.repo)
-
+  const { data: branches } = await github.rest.repos.listBranches(GitHub.context.repo)
+  // console.log(GitHub.context)
   // check to make sure the API returned the correct data type
   if (!Array.isArray(branches)) {
     throw new Error('Expected Array of branches from GitHub API')
@@ -44,6 +44,7 @@ async function getBranchHierarchy(config) {
  */
 async function findDownStreamBranches(config) {
   const branchHierarchy = await getBranchHierarchy(config)
+  // console.log(GitHub.context)
   const srcBranch = GitHub.context.ref.split('refs/heads/')[1]
 
   // console.log(`branchHierarchy: [${branchHierarchy.join(', ')}]`, `Source Branch: ${srcBranch}`);
@@ -67,7 +68,7 @@ async function merge(source, target, config) {
   try {
     const commitMessage = config.mergeTpl.replace('{source_branch}', source).replace('{target_branch}', target)
 
-    await github.repos.merge({
+    await github.rest.repos.merge({
       owner: repo.owner,
       repo: repo.repo,
       base: target,
@@ -100,7 +101,7 @@ async function mergeRequest(source, target, config) {
   try {
     const prTitle = config.prTpl.replace('{source_branch}', source).replace('{target_branch}', target)
 
-    await github.pulls.create({
+    await github.rest.pulls.create({
       owner: repo.owner,
       repo: repo.repo,
       base: target,
